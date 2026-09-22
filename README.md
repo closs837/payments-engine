@@ -1,51 +1,35 @@
-# Rust Coding Test
+# Payments engine
 
-Given a CSV representing a series of transactions, implement a simple toy transactions engine
-that processes the payments crediting and debiting accounts. After processing the complete set
-of payments output the client account balances
-You should be able to run your payments engine like
-$ cargo run -- transactions.csv > accounts.csv
-The input file is the first and only argument to the binary. Output should be written to std out
-
-# Instructions
-
-To compile the program run the following:
+A small transaction-processing engine in Rust, written for a take-home exercise: it reads
+a CSV of payment operations and prints the resulting account balances.
 
 ```
-cargo build
-```
-To run the test cases:
-
-```
-cargo test -- --show-output
+cargo run -- input_test.csv > accounts.csv
 ```
 
-To run the input file sample:
+The input file is the only argument; output goes to stdout as
+`client, available, held, total, locked`.
 
-```
-cargo run input_csv.csv
-```
+## What it handles
 
-# Considerations:
+- `deposit` and `withdrawal` against a client account, with held funds kept separate from
+  available funds.
+- `dispute`, `resolve` and `chargeback` against an earlier transaction id, including the
+  freeze that a dispute puts on the disputed amount.
+- Bad input is rejected instead of guessed at: unknown operation types, non-numeric
+  amounts, duplicate or unknown transaction ids, and operations on locked accounts are
+  skipped or reported as errors.
 
-```
-    - CSV is read through BufReader, which "can improve the speed of programs that make small and repeated read calls to the same file or network socket".
-    - Operations are processed line by line, which matches BufReader implementation.
-    - All operations are functional.
-    - Some errors are considered critical and interrupt execution (panic), due to possible invalid values or security issues. This should be changed in product to logging error:
-        1) CSV Line with invalid operation (not a dispute, withdrawal, dispute, resolve, chargeback).
-        2) Invalid Transaction ID (e.g. String)
-        3) Invalid Amount value (e.g. String)
-        4) Invalid Client ID (e.g. String)
-        5) Conflicting transactions: one or more transactions with same ID
-        6) Divergent dispute/chargeback/resolve and transaction id: client ID in transaction ID of dispute is different than client ID in stored transaction.
-    - Some errors result in skipping the operation:
-        1) Operating a locked account
-        2) Dispute/Chargeback/Resolve with invalid Transaction ID (previous transaction ID not found)
-        3) Resolve or Chargeback transaction that is not under dispute
-        4) Account without funds for withdrawal
-```
-    
-    
+## Layout
 
+| Path | Purpose |
+| --- | --- |
+| `src/csv_process.rs` | CSV reader and row model |
+| `src/operations.rs` | Operation handlers and account bookkeeping |
+| `src/error_handling.rs` | Error types |
+| `src/lib.rs` | Entry point and output formatting |
 
+`serde_derive` is vendored under `serde/` so the exercise builds without network access;
+`input_test.csv` is a small sample to run against.
+
+`cargo test` runs the unit tests.

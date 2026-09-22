@@ -21,7 +21,7 @@ pub fn lib_main(){
 pub fn format_output(accounts:HashMap<u16,AccountDetails>)->String{
     let mut output = "client, available, held, total, locked".to_string();
     for (key, value) in accounts.into_iter() {
-        output = format!("{}\n{},{},{},{},{}",output,key,value.total,value.held,value.total,value.locked.to_string());
+        output = format!("{}\n{},{},{},{},{}",output,key,value.available,value.held,value.total,value.locked.to_string());
     }
     output
 }
